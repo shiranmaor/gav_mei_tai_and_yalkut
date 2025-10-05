@@ -524,6 +524,48 @@
   })();
   </script>
 
+    <!-- שליחה ל-Google Sheets -->
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxbiipmAXKsZBDlx_vhdVNsBcYlco4kDr2ww3-Sdf6em4oNdBvNBnbAXelbLyZuU7_B/exec";
+    const PAGE_ID = "gav_mei_tai_and_yalkut"; 
+
+    // בעת טעינת הדף – רושם כניסה
+    window.addEventListener("DOMContentLoaded", () => {
+      fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ type: "pageview", page_id: PAGE_ID }),
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    // בעת שליחת טופס – שולח גם הרשמה
+    const form = document.getElementById("leadForm");
+    if (form) {
+      form.addEventListener("submit", function(e) {
+        const fd = new FormData(form);
+        const name = fd.get("name") || "";
+        const phone = fd.get("phone") || "";
+        const email = fd.get("email") || "";
+        const message = fd.get("message") || "";
+
+        fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            type: "registration",
+            page_id: PAGE_ID,
+            name: name,
+            phone: phone,
+            email: email,
+            message: message
+          }),
+          headers: { "Content-Type": "application/json" },
+        })
+        .then(() => console.log("✅ הרשמה נרשמה ב-Google Sheets"))
+        .catch(err => console.error("⚠️ שגיאה בשליחה ל-Google Sheets:", err));
+      });
+    }
+  </script>
+
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
