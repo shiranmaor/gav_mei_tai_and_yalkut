@@ -529,12 +529,13 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbxbiipmAXKsZBDlx_vhdVNsBcYlco4kDr2ww3-Sdf6em4oNdBvNBnbAXelbLyZuU7_B/exec";
     const PAGE_ID = "gav_mei_tai_and_yalkut"; 
 
-    // בעת טעינת הדף – רושם כניסה
+    // בעת טעינת הדף – רושם צפייה בדף
     window.addEventListener("DOMContentLoaded", () => {
       fetch(API_URL, {
         method: "POST",
-        body: JSON.stringify({ type: "pageview", page_id: PAGE_ID }),
-        headers: { "Content-Type": "application/json" },
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ type: "pageview", page_id: PAGE_ID })
       });
     });
 
@@ -550,6 +551,8 @@
 
         fetch(API_URL, {
           method: "POST",
+          mode: "no-cors", // חשוב למובייל – מונע CORS/preflight
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({
             type: "registration",
             page_id: PAGE_ID,
@@ -557,8 +560,7 @@
             phone: phone,
             email: email,
             message: message
-          }),
-          headers: { "Content-Type": "application/json" },
+          })
         })
         .then(() => console.log("✅ הרשמה נרשמה ב-Google Sheets"))
         .catch(err => console.error("⚠️ שגיאה בשליחה ל-Google Sheets:", err));
