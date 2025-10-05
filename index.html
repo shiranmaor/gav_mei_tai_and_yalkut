@@ -332,8 +332,7 @@
       <form id="leadForm"
             action="https://formspree.io/f/xwprqvqb"
             method="POST"
-            target="fs_silent"
-            onsubmit="showThanks(); delayedPaybox();">
+            target="fs_silent">
         <div>
           <label for="name">שם מלא</label>
           <input id="name" name="name" type="text" placeholder="שם ההורה" required />
@@ -526,8 +525,39 @@
 
     <!-- שליחה ל-Google Sheets -->
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxbiipmAXKsZBDlx_vhdVNsBcYlco4kDr2ww3-Sdf6em4oNdBvNBnbAXelbLyZuU7_B/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwujo1fbLVJrZ9XKJa11Gxn1WAqoUJ4ayRBC2hWTBCdGRTu413bjLj2l8X6Eb6NJrzb/exec";
     const PAGE_ID = "gav_mei_tai_and_yalkut"; 
+
+    // ====== עזר: מסכה עם טקסט מותאם ======
+  function showMaskText(text) {
+    const mask = document.getElementById('successMask');
+    if (!mask) return;
+    // ה-div הראשון בתוך success-box מחזיק את הטקסט
+    const msgEl = mask.querySelector('.success-box > div:first-child');
+    if (msgEl) msgEl.textContent = text;
+    mask.classList.add('show');
+    mask.setAttribute('aria-hidden', 'false');
+  }
+  function showThanks() {
+    showMaskText('תודה! מעבירה אותך לתשלום…');
+  }
+
+  // ====== JSONP: בקשת ספירה (ללא CORS) ======
+  function getRegistrationCount(pageId) {
+    return new Promise((resolve, reject) => {
+      const cbName = 'countCb_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
+      window[cbName] = function (data) {
+        try { resolve(Number(data && data.count || 0)); } finally {
+          delete window[cbName];
+          s.remove();
+        }
+      };
+      const s = document.createElement('script');
+      s.src = API_URL + '?fn=count&page_id=' + encodeURIComponent(pageId) + '&callback=' + cbName;
+      s.onerror = () => { delete window[cbName]; reject(new Error('count load error')); };
+      document.head.appendChild(s);
+    });
+  }
 
     // בעת טעינת הדף – רושם צפייה בדף
     window.addEventListener("DOMContentLoaded", () => {
@@ -542,30 +572,63 @@
     // בעת שליחת טופס – שולח גם הרשמה
     const form = document.getElementById("leadForm");
     if (form) {
-      form.addEventListener("submit", function(e) {
-        const fd = new FormData(form);
-        const name = fd.get("name") || "";
-        const phone = fd.get("phone") || "";
-        const email = fd.get("email") || "";
-        const message = fd.get("message") || "";
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault(); // עוצרים כדי לבדוק כמה כבר נרשמו
+
+    const fd = new FormData(form);
+    const name    = (fd.get("name")    || "").toString();
+    const phone   = (fd.get("phone")   || "").toString();
+    const email   = (fd.get("email")   || "").toString();
+    const message = (fd.get("message") || "").toString();
+
+    try {
+      // 1) בודקים ספירה לפי PAGE_ID (ללא CORS באמצעות JSONP — כבר יש לך getRegistrationCount)
+      showMaskText('בודקת זמינות…');
+      const count = await getRegistrationCount(PAGE_ID);
+
+      if (count >= 5) {
+        // 2) מלא — מציגים הודעה ושומרים ל־WaitingList. לא ממשיכים לתשלום.
+        showMaskText('הסדנה מלאה בתאריך הזה כבר,\nאבל שמרתי את הפרטים שלך ואכתוב לך כשיפתח מועד חדש.');
 
         fetch(API_URL, {
           method: "POST",
-          mode: "no-cors", // חשוב למובייל – מונע CORS/preflight
+          mode: "no-cors",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({
-            type: "registration",
+            type: "waitinglist",
             page_id: PAGE_ID,
-            name: name,
-            phone: phone,
-            email: email,
-            message: message
+            name, phone, email, message
           })
+        });
+        return; // לא שולחים ל-Formspree ולא לפייבוקס
+      }
+
+      // 3) יש מקום — רושמים ל-Registrations + ממשיכים ל-Formspree + מעבר לפייבוקס
+      fetch(API_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          type: "registration",
+          page_id: PAGE_ID,
+          name, phone, email, message
         })
-        .then(() => console.log("✅ הרשמה נרשמה ב-Google Sheets"))
-        .catch(err => console.error("⚠️ שגיאה בשליחה ל-Google Sheets:", err));
       });
+
+      showThanks();        // כבר קיימת אצלך — מציג "תודה! מעבירה אותך לתשלום…"
+      form.submit();       // שליחה ל-Formspree (ב-iframe שקט)
+      delayedPaybox();     // הקיים אצלך — מעביר אחרי 2 שניות
+
+    } catch (err) {
+      console.error('count error', err);
+      // במקרה תקלה — לא חוסמים את הלקוחה
+      showThanks();
+      form.submit();
+      delayedPaybox();
     }
+  });
+}
+
   </script>
 
   <script type="application/ld+json">
