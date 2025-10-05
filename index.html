@@ -9,25 +9,27 @@
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --tz-50:#f2fbfb;
-      --tz-100:#e0f6f6;
-      --tz-200:#c7eff0;
-      --tz-300:#ade8eb;
-      --tz-400:#7dd9de;
-      --tz-500:#54cbd3;
-      --tz-700:#1c96a2;
-      --tz-800:#157683;
-      --ink:#163033;
-      --muted:#5f7b80;
+      /* 🎨 גוונים של סלמון עדין */
+      --tz-50:#fff7f6;    /* רקע הכי בהיר */
+      --tz-100:#ffeae7;   /* רקע בהיר */
+      --tz-200:#ffd4cd;   /* גוון רך לכפתורים בהירים */
+      --tz-300:#ffb8a9;   /* טון ביניים רך */
+      --tz-400:#fa9c88;   /* צבע טיפה מודגש */
+      --tz-500:#fa8072;   /* צבע ראשי */
+      --tz-700:#e86d61;   /* טון כהה יותר לכותרות/hover */
+      --tz-800:#c85b52;   /* כהה ללחצנים */
+      --ink:#2b1a18;      /* טקסט כהה */
+      --muted:#70514f;    /* טקסט משני */
       --white:#fff;
       --card:#fff;
       --bg:var(--tz-50);
       --radius-xl:22px;
       --radius:14px;
-      --shadow-lg:0 18px 40px rgba(6,44,50,.10);
-      --shadow:0 10px 26px rgba(6,44,50,.08);
-      --focus:0 0 0 3px rgba(84,203,211,.35);
+      --shadow-lg:0 18px 40px rgba(100,40,30,.10);
+      --shadow:0 10px 26px rgba(100,40,30,.08);
+      --focus:0 0 0 3px rgba(250,128,114,.35);
     }
+
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
     body{
@@ -43,10 +45,14 @@
 
     /* Topbar + Hamburger */
     .topbar{
-      position:sticky; top:0; z-index:50;
-      background:rgba(242,251,251,.9); backdrop-filter: blur(8px);
-      border-bottom:1px solid var(--tz-100);
+      position:sticky; 
+      top:0; 
+      z-index:50;
+      background:rgba(255,245,244,0.9); /* 🎨 רקע אפרסקי שקוף */
+      backdrop-filter: blur(8px);
+      border-bottom:1px solid var(--tz-200); /* קו תחתון עדין */
     }
+
     .brand{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--tz-800)}
     .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--tz-400);box-shadow:0 0 0 6px var(--tz-100) inset}
     .hamburger{
@@ -55,8 +61,9 @@
       background:#fff; cursor:pointer;
     }
     .hamburger span,.hamburger::before,.hamburger::after{
-      content:""; display:block; width:22px; height:2px; background:var(--tz-800); border-radius:2px
+      content:""; display:block; width:22px; height:2px; background:var(--tz-800); border-radius:2px;
     }
+
     .hamburger::before{transform:translateY(-6px)}
     .hamburger::after{transform:translateY(6px)}
 
@@ -81,8 +88,9 @@
 
     /* Hero */
     header.hero{
-      background:linear-gradient(180deg,#e9fafb,#d9f4f6);
-      color:var(--ink); text-align:center; padding:56px 16px 30px; position:relative; overflow:hidden;
+      background: linear-gradient(180deg, var(--tz-50), var(--tz-100));
+      color: var(--ink);
+      text-align:center; padding:56px 16px 30px; position:relative; overflow:hidden;
     }
     .hero h1{margin:0 0 8px; font-size:clamp(28px,4.6vw,46px); font-weight:800; letter-spacing:.2px}
     .hero p{max-width:820px;margin:0 auto 22px;font-size:clamp(16px,2.2vw,20px);color:var(--muted)}
@@ -99,7 +107,7 @@
     .btn-outline:hover{background:#f7fdfd}
     .hero-img{
       width:100%; max-width:820px; margin:18px auto 0; display:block;
-      border-radius:20px; box-shadow:var(--shadow); object-fit:cover; max-height:420px; background:#e8f7f8;
+      border-radius:20px; box-shadow:var(--shadow); object-fit:cover; max-height:420px; background:var(--tz-100);
     }
 
     /* Sections & cards */
@@ -147,11 +155,37 @@
     .note{font-size:13px;color:var(--muted)}
 
     /* FAQ indentation on open */
-    details{background:#fff;border:1px solid var(--tz-100);border-radius:12px;padding:10px 12px;margin:10px 0;transition:border-color .2s, background .2s}
-    details[open]{background:#f7fdfd;border-color:var(--tz-200)}
-    summary{cursor:pointer;font-weight:700;color:var(--tz-800);outline:none}
-    .faq-body{margin-top:8px;padding-right:14px;border-right:3px solid var(--tz-200);transition:padding .2s, border-color .2s}
-    details[open] .faq-body{padding-right:18px;border-right-color:var(--tz-300)}
+    details{
+      background:#fff;
+      border:1px solid var(--tz-100);
+      border-radius:12px;
+      padding:10px 12px;
+      margin:10px 0;
+      transition:border-color .2s, background .2s;
+    }
+    details[open]{
+      background:var(--tz-50); /* רקע ורדרד רך */
+      border-color:var(--tz-200);
+    }
+    summary{
+      cursor:pointer;
+      font-weight:700;
+      color:var(--tz-800);
+      outline:none;
+    }
+    .faq-body{
+      margin-top:8px;
+      padding-right:14px;
+      border-right:3px solid var(--tz-200);
+      transition:padding .2s, border-color .2s;
+    }
+    details[open] .faq-body{
+      padding-right:18px;
+      border-right-color:var(--tz-300);
+      background:var(--tz-100); /* מוסיף גוון עדין לתוכן שנפתח */
+      border-radius:10px;
+    }
+
     /* Footer */
     footer{margin-top:32px;padding:28px 16px;background:var(--tz-800);color:#d8f3f6;text-align:center}
     .footer-links{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
@@ -168,6 +202,15 @@
     }
     .spinner{width:28px; height:28px; border:3px solid var(--tz-200); border-top-color:var(--tz-700); border-radius:50%; margin:10px auto 0; animation:spin .75s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* שבירת שורה רק במובייל */
+    @media (max-width: 600px) {
+      .mobile-break {
+        display: block;
+        margin-top: 6px; /* רווח קטן בין השורות */
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -199,7 +242,7 @@
   <!-- Hero -->
   <header class="hero">
     <div class="container">
-      <h1>סדנת העברה לגב במאי טאי וילקוט</h1>
+      <h1>סדנת העברה לגב <span class="mobile-break">במאי טאי וילקוט</span></h1>
       <p>למידת טכניקת העברה לגב ונשיאה נוחה ובטוחה</p>
       <div class="cta-row">
         <a class="btn btn-primary" href="#register">להרשמה ושמירת מקום</a>
