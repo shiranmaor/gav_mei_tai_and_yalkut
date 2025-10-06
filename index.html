@@ -329,10 +329,8 @@
       <h2>הרשמה</h2>
       <p class="muted">מלאי פרטים ולאחר מכן תועברי אוטומטית לדף תשלום בפייבוקס.</p>
 
-      <form id="leadForm"
-            action="https://formspree.io/f/xwprqvqb"
-            method="POST"
-            target="fs_silent">
+      <form id="leadForm">
+
         <div>
           <label for="name">שם מלא</label>
           <input id="name" name="name" type="text" placeholder="שם ההורה" required />
@@ -358,8 +356,6 @@
         <div class="note">לאחר השליחה תועברי ישירות לתשלום בפייבוקס.</div>
       </form>
 
-      <!-- שליחה שקטה ל-Formspree (כדי שהעמוד הראשי יישאר 2 שניות עם הודעת תודה) -->
-      <iframe name="fs_silent" style="display:none" title="Formspree silent submit"></iframe>
     </section>
 
     <!-- Success overlay -->
@@ -525,7 +521,7 @@
 
     <!-- שליחה ל-Google Sheets -->
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwujo1fbLVJrZ9XKJa11Gxn1WAqoUJ4ayRBC2hWTBCdGRTu413bjLj2l8X6Eb6NJrzb/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycby-jKbO4HRMjR6BoGC3tvk6GhVoqMySfRRqtRvloy8no3K5k-khMYYpo5_dbrOzQiUr/exec";
     const PAGE_ID = "gav_mei_tai_and_yalkut"; 
 
     // ====== עזר: מסכה עם טקסט מותאם ======
@@ -616,14 +612,12 @@
       });
 
       showThanks();        // כבר קיימת אצלך — מציג "תודה! מעבירה אותך לתשלום…"
-      form.submit();       // שליחה ל-Formspree (ב-iframe שקט)
       delayedPaybox();     // הקיים אצלך — מעביר אחרי 2 שניות
 
     } catch (err) {
       console.error('count error', err);
       // במקרה תקלה — לא חוסמים את הלקוחה
       showThanks();
-      form.submit();
       delayedPaybox();
     }
   });

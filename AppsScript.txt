@@ -1,0 +1,159 @@
+const SHEET_ID = '1wgG5ZWYxlYQhKrNrbZ8YntfTxiUBZwYnu4vjm9v2k7k';
+const MAX_REGISTRATIONS = 5;
+
+function ss() {
+  return SpreadsheetApp.openById(SHEET_ID);
+}
+
+function ensureSheet(name) {
+  return ss().getSheetByName(name) || ss().insertSheet(name);
+}
+
+/**
+ * ספירת הרשמות קיימות לפי page_id
+ */
+function countRegistrations(pageId) {
+  const sheetReg = ensureSheet('Registrations');
+  const last = sheetReg.getLastRow();
+  let count = 0;
+
+  if (last >= 1 && pageId) {
+    // בדיקה אם יש שורת כותרת - נבדוק את B1
+    const headerCell = String(sheetReg.getRange(1, 2).getValue() || '').trim().toLowerCase();
+    const hasHeader = (headerCell === 'pageid' || headerCell === 'page_id' || headerCell === 'page id');
+
+    const startRow = hasHeader ? 2 : 1;
+    const numRows = last - startRow + 1;
+
+    if (numRows > 0) {
+      const values = sheetReg.getRange(startRow, 1, numRows, 6).getValues();
+      for (let i = 0; i < values.length; i++) {
+        const rowPageId = String(values[i][1] || '').trim();
+        if (rowPageId === pageId) count++;
+      }
+    }
+  }
+
+  return count;
+}
+
+/**
+ * 🟢 שליחת מייל על הרשמה חדשה
+ */
+function sendEmail(name, phone, email, message, pageId, count, isWaiting) {
+  const workshopName =
+    pageId === 'gav_mei_tai_and_yalkut' ? 'העברה לגב במאי טאי וילקוט' :
+    pageId === 'arug_aroch_basis' ? 'ארוג ארוך - בסיס' :
+    pageId;
+
+  const status = isWaiting ? 'המתנה' : 'הרשמה';
+  const subject = `יששש! ${status} חדשה לסדנת ${workshopName}`;
+  const body =
+    `יששש 🎉\n` +
+    `עוד ${status} לסדנת ${workshopName}\n\n` +
+    `שם: ${name}\n` +
+    `טלפון: ${phone}\n` +
+    `אימייל: ${email}\n` +
+    `הודעה: ${message}\n\n` +
+    `בינתיים נרשמו ${count} משתתפות!`;
+
+  MailApp.sendEmail({
+    to: 'shiranmaor.k@gmail.com',
+    subject: subject,
+    body: body
+  });
+}
+
+function doPost(e) {
+  const data = JSON.parse(e.postData.contents || '{}');
+  const sheetReg = ensureSheet('Registrations');
+  const sheetViews = ensureSheet('PageViews');
+  const sheetWait = ensureSheet('WaitingList');
+
+  if (!data.type || data.type === 'registration' || data.type === 'submit') {
+    const pageId = data.page_id || '';
+    const currentCount = countRegistrations(pageId);
+
+    // אם הסדנה מלאה
+    if (currentCount >= MAX_REGISTRATIONS) {
+      sheetWait.appendRow([new Date(), pageId, data.name || '', data.phone || '', data.email || '', data.message || '']);
+      sendEmail(data.name, data.phone, data.email, data.message, pageId, currentCount, true); // מייל על רשימת המתנה
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'waitinglist',
+        message: 'ההרשמה נוספה לרשימת המתנה'
+      })).setMimeType(ContentService.MimeType.JSON);
+    } 
+    // אחרת – הרשמה רגילה
+    else {
+      sheetReg.appendRow([new Date(), pageId, data.name || '', data.phone || '', data.email || '', data.message || '']);
+      sendEmail(data.name, data.phone, data.email, data.message, pageId, currentCount + 1, false); // מייל על הרשמה רגילה
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'ok',
+        registrations_left: MAX_REGISTRATIONS - currentCount - 1
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
+  if (data.type === 'waitinglist') {
+    sheetWait.appendRow([new Date(), data.page_id || '', data.name || '', data.phone || '', data.email || '', data.message || '']);
+    sendEmail(data.name, data.phone, data.email, data.message, data.page_id, 0, true);
+    return ContentService.createTextOutput(JSON.stringify({ status: 'ok' })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (data.type === 'pageview') {
+    const ip = (e.parameter && e.parameter.ip) || 'unknown';
+    sheetViews.appendRow([new Date(), data.page_id || '', ip]);
+    return ContentService.createTextOutput(JSON.stringify({ status: 'ok' })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'Invalid type' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/** JSONP: ?fn=count&page_id=XXX&callback=cb */
+function doGet(e) {
+  const pageId = String((e.parameter && e.parameter.page_id) || '').trim();
+  const cb = (e.parameter && e.parameter.callback) || 'callback';
+  const debug = e.parameter && e.parameter.debug;
+
+  if (debug) {
+    const sheetReg = ensureSheet('Registrations');
+    const last = sheetReg.getLastRow();
+    const debugInfo = {
+      lastRow: last,
+      headerCheck: '',
+      hasHeader: false,
+      startRow: 1,
+      pageIds: []
+    };
+
+    if (last >= 1) {
+      const headerCell = String(sheetReg.getRange(1, 2).getValue() || '');
+      debugInfo.headerCheck = headerCell;
+      const headerCellLower = headerCell.trim().toLowerCase();
+      debugInfo.hasHeader = (headerCellLower === 'pageid' || headerCellLower === 'page_id' || headerCellLower === 'page id');
+      debugInfo.startRow = debugInfo.hasHeader ? 2 : 1;
+      const numRows = last - debugInfo.startRow + 1;
+
+      if (numRows > 0) {
+        const values = sheetReg.getRange(debugInfo.startRow, 1, numRows, 6).getValues();
+        debugInfo.pageIds = values.map((row, idx) => ({
+          row: debugInfo.startRow + idx,
+          pageId: String(row[1] || ''),
+          pageIdTrimmed: String(row[1] || '').trim(),
+          name: row[2]
+        }));
+      }
+    }
+
+    const payload = cb + '(' + JSON.stringify(debugInfo) + ')';
+    return ContentService.createTextOutput(payload)
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+
+  const count = countRegistrations(pageId);
+  const payload = cb + '(' + JSON.stringify({ count: count }) + ')';
+  return ContentService.createTextOutput(payload)
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
+
